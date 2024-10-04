@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 function App() {
@@ -9,67 +9,60 @@ function App() {
   const [isVideoStopped, setIsVideoStopped] = useState(true)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
 
-  // Function to get media (audio/video)
+  // Function to get media stream with optional audio and video
   const getMediaStream = async (audio: boolean, video: boolean) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio, video });
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
+      if (localStream) {
+        // If we already have a stream, update it by adding new tracks
+        if (audio && stream.getAudioTracks().length > 0) {
+          localStream.addTrack(stream.getAudioTracks()[0]);
+        }
+        if (video && stream.getVideoTracks().length > 0) {
+          localStream.addTrack(stream.getVideoTracks()[0]);
+        }
+      } else {
+        // If there's no existing stream, set the new stream
+        setLocalStream(stream);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
       }
     } catch (err) {
       console.error("Error accessing media devices:", err);
     }
-  }
-  // Stop all tracks of a specific type (audio or video)
-  const stopMediaTracks = (stream: MediaStream, type: "audio" | "video") => {
-    stream.getTracks().forEach((track) => {
-      if (track.kind === type) {
-        track.stop();
-      }
-    });
   };
 
-  const toggleMute = () => {
-    if (localStream) {
+  // Toggle microphone (request audio stream if not initialized)
+  const toggleMute = async () => {
+    if (!localStream || localStream.getAudioTracks().length === 0) {
+      // If no audio track, request it
+      await getMediaStream(true, !isVideoStopped);
+      setIsMuted(false);
+    } else {
+      // Toggle audio track enabled/disabled
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
-        if (isMuted) {
-          // Unmute: request a new audio stream
-          getMediaStream(true, !isVideoStopped);
-        } else {
-          // Mute: stop the audio track
-          stopMediaTracks(localStream, 'audio');
-        }
-        setIsMuted(!isMuted);
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
       }
-    } else if (isMuted) {
-      // Request audio stream when unmuting for the first time
-      getMediaStream(true, !isVideoStopped);
-      setIsMuted(false);
     }
-    console.log("audio", isMuted, isVideoStopped);
   };
 
-  const toggleVideo = () => {
-    if (localStream) {
+  // Toggle camera (request video stream if not initialized)
+  const toggleVideo = async () => {
+    if (!localStream || localStream.getVideoTracks().length === 0) {
+      // If no video track, request it
+      await getMediaStream(!isMuted, true);
+      setIsVideoStopped(false);
+    } else {
+      // Toggle video track enabled/disabled
       const videoTrack = localStream.getVideoTracks()[0];
       if (videoTrack) {
-        if (isVideoStopped) {
-          // Start video: request a new video stream
-          getMediaStream(!isMuted, true);
-        } else {
-          // Stop video: stop the video track
-          stopMediaTracks(localStream, 'video');
-        }
-        setIsVideoStopped(!isVideoStopped);
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoStopped(!videoTrack.enabled);
       }
-    } else if (isVideoStopped) {
-      // Request video stream when enabling video for the first time
-      getMediaStream(!isMuted, true);
-      setIsVideoStopped(false);
     }
-    console.log("audio", isMuted, isVideoStopped);
   };
 
   return (
@@ -104,8 +97,6 @@ function App() {
           </button>
           <button className="py-2 px-4 rounded bg-red-600 text-white">Leave Meeting</button>
         </div>
-
-
       </div>
     </>
   )
