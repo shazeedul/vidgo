@@ -13,8 +13,15 @@ var (
 	key  = flag.String("key", "", "")
 )
 
-func Run() {
-	router := gin.Default()
+func Run() error {
+	flag.Parse()
 
-	return 
+	if *addr == ":" {
+		*addr = ":8080"
+	}
+	router := gin.Default()
+	if *cert != "" {
+		return router.RunTLS(*addr, *cert, *key)
+	}
+	return router.Run(*addr)
 }
