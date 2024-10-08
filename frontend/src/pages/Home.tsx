@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from "../providers/Socket"
 
 function Home() {
     const [roomId, setRoomId] = useState('');
+
+    const { socket } = useSocket();
 
     const navigate = useNavigate();
 
@@ -11,6 +14,13 @@ function Home() {
         if (roomId) {
             console.log(`Joining room ${roomId}`);
             // Handle room join logic here
+            // Store the room ID in local storage
+            localStorage.setItem('roomId', roomId)
+            socket.emit("join-room", {
+                roomId
+            })
+            navigate(`/room/${roomId}`)
+
         } else {
             alert('Please fill in both fields.');
         }

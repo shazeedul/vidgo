@@ -16,7 +16,7 @@ const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
     const socket = useMemo(() =>
         io({
             host: "localhost",
-            port: 8001,
+            port: 8090,
         }), []
     )
     return (
