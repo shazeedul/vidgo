@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import '../App.css'
 
 function Room() {
@@ -12,9 +12,17 @@ function Room() {
     const [videoError, setVideoError] = useState(true)
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         checkMicOrVideoError()
     }, [])
+
+    // Leave Room
+    const leaveRoom = () => {
+        // Redirect to home page by using navigate hook
+        navigate('/');
+    }
 
     // check mic or video is error for connect device
     const checkMicOrVideoError = () => {
@@ -180,7 +188,7 @@ function Room() {
                             </span>
                         )}
                     </button>
-                    <button className="py-2 px-4 rounded bg-red-600 text-white">Leave Meeting</button>
+                    <button className="py-2 px-4 rounded bg-red-600 text-white" type='button' onClick={leaveRoom}>Leave Meeting</button>
                 </div>
             </div>
         </>

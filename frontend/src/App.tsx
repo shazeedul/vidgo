@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
+import { SocketProvider } from "./providers/Socket";
 import Home from "./pages/Home";
 import Room from "./pages/Room";
-import { SocketProvider } from "./providers/Socket";
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
       <SocketProvider>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/room" element={<Room />} />
+          <Route path="/room/:uuid" element={<Room />} />
         </Routes>
       </SocketProvider>
     </>
