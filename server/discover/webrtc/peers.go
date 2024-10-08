@@ -23,14 +23,22 @@ var (
 		ICETransportPolicy: webrtc.ICETransportPolicyRelay,
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:relay.metered.ca:80"},
+				URLs: []string{"stun:stun.relay.metered.ca:80"},
 			},
 			{
 				URLs: []string{
-					"turn:relay.metered.ca:80",
+					"turn:global.relay.metered.ca:80",
 				},
-				Username:       "f656bb327ada11408d2cd592",
-				Credential:     "D5FTwyiln3XE0vFq",
+				Username:       "b88a1ce7a0a522cca48573a1",
+				Credential:     "k3ogBh0cvqHtjmkR",
+				CredentialType: webrtc.ICECredentialTypePassword,
+			},
+			{
+				URLs: []string{
+					"turn:global.relay.metered.ca:443",
+				},
+				Username:       "b88a1ce7a0a522cca48573a1",
+				Credential:     "k3ogBh0cvqHtjmkR",
 				CredentialType: webrtc.ICECredentialTypePassword,
 			},
 		},

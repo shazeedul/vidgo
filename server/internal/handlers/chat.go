@@ -1,32 +1,46 @@
 package handlers
 
 import (
-	"github.com/gorilla/websocket"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/shazeedul/vidgo/server/discover/chat"
 	w "github.com/shazeedul/vidgo/server/discover/webrtc"
 )
 
-func RoomChatWebsocket(c *websocket.Conn) {
-	uuid := c.Params("uuid")
+func RoomChatWebsocket(c *gin.Context) {
+	uuid := c.Param("uuid")
 	if uuid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "uuid is required"})
 		return
 	}
 
+	conn, err := chat.Upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upgrade connection"})
+		return
+	}
 	w.RoomsLock.Lock()
 	room := w.Rooms[uuid]
 	w.RoomsLock.Unlock()
-	if room == nil {
+	if room == nil || room.Hub == nil {
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	if room.Hub == nil {
-		return
-	}
-	chat.PeerChatConn(c.Conn, room.Hub)
+	chat.PeerChatConn(conn, room.Hub)
 }
 
-func StreamChatWebsocket(c *websocket.Conn) {
-	suuid := c.Params("suuid")
+func StreamChatWebsocket(c *gin.Context) {
+	suuid := c.Param("suuid")
 	if suuid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "suuid is required"})
+		return
+	}
+
+	// Upgrade the connection to a WebSocket
+	conn, err := chat.Upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upgrade connection"})
 		return
 	}
 
@@ -38,7 +52,7 @@ func StreamChatWebsocket(c *websocket.Conn) {
 			stream.Hub = hub
 			go hub.Run()
 		}
-		chat.PeerChatConn(c.Conn, stream.Hub)
+		chat.PeerChatConn(conn, stream.Hub)
 		return
 	}
 	w.RoomsLock.Unlock()

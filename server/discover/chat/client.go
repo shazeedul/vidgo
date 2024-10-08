@@ -2,6 +2,7 @@ package chat
 
 import (
 	"bytes"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -19,9 +20,13 @@ var (
 	space   = []byte{' '}
 )
 
-var upgrader = websocket.Upgrader{
+var Upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		// Allow all connections by default, modify this to fit your security requirements
+		return true
+	},
 }
 
 type Client struct {
